@@ -20,8 +20,9 @@ from ..utils.api.models import ZZZAvatarInfo
 from ..utils.zzzero_api import zzz_api
 from ..utils.enka_to_mys import _enka_data_to_mys_data
 from .draw_char_detail_card import TEXT_PATH
-from ..utils.fonts.zzz_fonts import zzz_font_40
+from ..utils.fonts.zzz_fonts import zzz_font_40, zzz_font_thin
 from ..utils.resource.RESOURCE_PATH import PLAYER_PATH
+from ..utils.translate import translate_character_data
 from ..zzzerouid_config.zzzero_config import ZZZ_CONFIG
 
 REFRESH_BG_PATH = TEXT_PATH / "refresh_bg"
@@ -101,6 +102,9 @@ async def refresh_char(
         save_data["uid"] = uid
         save_data["current_time"] = current_time
 
+        # Translate English names to Chinese for international accounts
+        translate_character_data(save_data)
+
         with open(path / f"{_id}.json", "wb") as f:
             d = json.dumps(
                 save_data,
@@ -109,7 +113,7 @@ async def refresh_char(
             ).encode("utf-8")
             f.write(d)
         # Prefer Chinese name from PartnerId2Data for button labels
-        cn_name = _PARTNER_NAMES.get(str(_id), "") or avatar["name_mi18n"]
+        cn_name = _PARTNER_NAMES.get(str(_id), "") or save_data["name_mi18n"]
         im.append(cn_name)
 
     is_pic: bool = ZZZ_CONFIG.get_config("RefreshCardUsePic").data
@@ -166,12 +170,12 @@ async def draw_refresh_card(
         char_bg.paste(role_img, (33, 26), role_img)
         char_bg.paste(rank_img, (84, 329), rank_img)
         char_draw = ImageDraw.Draw(char_bg)
-        name = avatar["name_mi18n"]
+        name = _PARTNER_NAMES.get(str(_id), "") or avatar["name_mi18n"]
         name = name.replace("「", "").replace("」", "")
         char_draw.text(
             (133, 350),
             name,
-            font=zzz_font_40,
+            font=zzz_font_thin(40),
             fill=(255, 255, 255),
             anchor="lm",
         )

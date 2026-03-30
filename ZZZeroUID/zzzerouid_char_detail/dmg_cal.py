@@ -1,3 +1,4 @@
+import re
 from typing import Dict, List
 
 from ..utils.zzz_map import skill_param
@@ -49,6 +50,7 @@ def to_bl(char_dict: dict) -> Dict[str, float]:
                 name = name.replace("普通攻击", "普攻")
                 name = name.replace("蓄力", "")
                 name = name.replace("伤害倍率", "")
+                name = re.sub(r'\(Test\d*\)', '', name)
                 name = name.strip()
 
                 if name.endswith(" -"):

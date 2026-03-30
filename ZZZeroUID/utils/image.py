@@ -20,6 +20,7 @@ from ..utils.resource.RESOURCE_PATH import (
     MIND_PATH,
     ROLECIRCLE_PATH,
     ROLEGENERAL_PATH,
+    SQUARE_AVATAR,
 )
 
 TEXT_PATH = Path(__file__).parent / "texture2d"
@@ -130,7 +131,12 @@ def get_circle_role_img(_id: Union[str, int], w: int = 142, h: int = 142):
     sprite_id = char_id_to_sprite(char_id)
     path = ROLECIRCLE_PATH / f"IconRoleCircle{sprite_id}.png"
     if not path.exists():
-        path = ROLECIRCLE_PATH / "IconRoleCircle03.png"
+        # Fall back to square avatar (indexed by char ID, not sprite ID)
+        sq_path = SQUARE_AVATAR / f"role_square_avatar_{char_id}.png"
+        if sq_path.exists():
+            path = sq_path
+        else:
+            path = ROLECIRCLE_PATH / "IconRoleCircle03.png"
     return Image.open(path).resize((w, h)).convert("RGBA")
 
 
