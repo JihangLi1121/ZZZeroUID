@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZZZeroUID — Account Link</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --neon: #ff3366;
+      --neon-dim: rgba(255, 51, 102, 0.15);
+      --neon-glow: rgba(255, 51, 102, 0.35);
+      --void: #07080d;
+      --deep: #0c0e17;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-hover: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 51, 102, 0.12);
+      --border-bright: rgba(255, 51, 102, 0.3);
+      --text: #d4d0c8;
+      --text-dim: rgba(212, 208, 200, 0.5);
+      --text-bright: #f0ece0;
+      --blue-accent: #5b8dd9;
+      --danger: #d94848;
+      --success: #49c06e;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--void);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ---- cosmic background ---- */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 120% 80% at 20% 10%, rgba(255,51,102,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 100% 60% at 80% 90%, rgba(255,51,102,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(12,14,23,1) 0%, var(--void) 100%);
+      z-index: 0;
+    }
+
+    /* star field */
+    .stars {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      overflow: hidden;
+    }
+    .stars span {
+      position: absolute;
+      width: 2px; height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      opacity: 0;
+      animation: twinkle var(--d, 4s) var(--delay, 0s) infinite ease-in-out;
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0; }
+      50% { opacity: var(--peak, 0.7); }
+    }
+
+    /* signal line decoration */
+    .rail-line {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent 0%, var(--neon) 30%, var(--neon) 70%, transparent 100%);
+      opacity: 0.15;
+      z-index: 1;
+    }
+    .rail-line::after {
+      content: '';
+      position: absolute;
+      width: 60px; height: 3px;
+      background: var(--neon);
+      box-shadow: 0 0 20px var(--neon-glow), 0 0 60px var(--neon-dim);
+      animation: signalMove 6s linear infinite;
+      border-radius: 2px;
+    }
+    @keyframes signalMove {
+      0% { left: -60px; }
+      100% { left: calc(100% + 60px); }
+    }
+
+    /* ---- main card ---- */
+    .card {
+      position: relative; z-index: 2;
+      width: 400px;
+      background: linear-gradient(170deg, rgba(20,22,35,0.95) 0%, rgba(10,12,20,0.98) 100%);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      animation: cardIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* neon corner accents */
+    .card::before, .card::after {
+      content: ''; position: absolute;
+      width: 24px; height: 24px;
+      border-color: var(--neon); border-style: solid;
+      opacity: 0.4;
+    }
+    .card::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    .card::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+    /* header strip */
+    .card-header {
+      padding: 1.5rem 1.8rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 1rem;
+      position: relative;
+    }
+    .card-header::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 1.8rem;
+      width: 60px; height: 2px;
+      background: var(--neon);
+      box-shadow: 0 0 8px var(--neon-glow);
+    }
+
+    .emblem {
+      width: 44px; height: 44px;
+      border: 1.5px solid var(--neon);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      flex-shrink: 0;
+    }
+    .emblem::before {
+      content: '';
+      position: absolute; inset: 3px;
+      border: 1px solid rgba(255,51,102,0.2);
+      border-radius: 50%;
+    }
+    .emblem svg { width: 20px; height: 20px; fill: var(--neon); }
+
+    .header-info { flex: 1; }
+    .header-info h1 {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--neon);
+      line-height: 1.2;
+    }
+    .header-info .sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+      margin-top: 3px;
+      font-family: 'Outfit', sans-serif;
+    }
+    .uid-badge {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.55rem;
+      color: var(--text-dim);
+      letter-spacing: 0.05em;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 3px 8px;
+      border-radius: 2px;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 0.75rem 0;
+      background: none; border: none;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      cursor: pointer;
+      position: relative;
+      transition: color 0.3s;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--neon); }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute; bottom: -1px; left: 20%; right: 20%;
+      height: 2px;
+      background: var(--neon);
+      box-shadow: 0 0 8px var(--neon-glow);
+    }
+
+    /* content area */
+    .card-body { padding: 1.4rem 1.8rem 1.6rem; }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeUp 0.35s ease both; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-desc {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 1.2rem;
+      line-height: 1.5;
+    }
+
+    /* inputs */
+    .field { margin-bottom: 0.9rem; }
+    .field label {
+      display: block;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      margin-bottom: 0.35rem;
+    }
+    .field label code {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      color: var(--neon);
+      background: var(--neon-dim);
+      padding: 2px 7px;
+      border-radius: 2px;
+      letter-spacing: 0.08em;
+    }
+    input[type="email"],
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 0.65rem 0.8rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text-bright);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    input:focus {
+      outline: none;
+      border-color: var(--neon);
+      box-shadow: 0 0 0 2px var(--neon-dim), inset 0 0 12px var(--neon-dim);
+    }
+    input::placeholder { color: rgba(212,208,200,0.25); }
+
+    /* buttons */
+    .btn {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.6rem;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.65rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      border: 1px solid;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    .btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      transform: translateX(-100%);
+      transition: transform 0.5s;
+    }
+    .btn:hover:not(:disabled)::before { transform: translateX(100%); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, rgba(255,51,102,0.15), rgba(255,51,102,0.05));
+      border-color: var(--neon);
+      color: var(--neon);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(255,51,102,0.25), rgba(255,51,102,0.1));
+      box-shadow: 0 0 20px var(--neon-dim), inset 0 0 20px var(--neon-dim);
+    }
+    .btn-secondary {
+      background: linear-gradient(135deg, rgba(91,141,217,0.12), rgba(91,141,217,0.04));
+      border-color: var(--blue-accent);
+      color: var(--blue-accent);
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: linear-gradient(135deg, rgba(91,141,217,0.22), rgba(91,141,217,0.08));
+      box-shadow: 0 0 20px rgba(91,141,217,0.15);
+    }
+
+    /* hint box */
+    .hint {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 2px solid var(--neon);
+      border-radius: 0 2px 2px 0;
+      padding: 0.75rem 0.9rem;
+      margin-bottom: 1rem;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text);
+    }
+    .hint strong { color: var(--text-bright); font-weight: 500; }
+    .hint code {
+      background: rgba(255,51,102,0.08);
+      color: var(--neon);
+      padding: 1px 5px;
+      border-radius: 2px;
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+    }
+    .hint a { color: var(--blue-accent); text-decoration: none; }
+    .hint a:hover { text-decoration: underline; }
+
+    /* status */
+    .status-msg {
+      text-align: center;
+      padding: 0.55rem 0.8rem;
+      border-radius: 2px;
+      margin-top: 0.7rem;
+      font-size: 0.75rem;
+      display: none;
+      border: 1px solid;
+    }
+    .status-msg.success {
+      display: block;
+      background: rgba(73,192,110,0.08);
+      border-color: rgba(73,192,110,0.3);
+      color: var(--success);
+    }
+    .status-msg.error {
+      display: block;
+      background: rgba(217,72,72,0.08);
+      border-color: rgba(217,72,72,0.3);
+      color: var(--danger);
+    }
+    .status-msg.loading {
+      display: block;
+      background: rgba(91,141,217,0.08);
+      border-color: rgba(91,141,217,0.3);
+      color: var(--blue-accent);
+    }
+
+    /* modal */
+    .modal {
+      display: none;
+      position: fixed; z-index: 100; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+    }
+    .modal.show {
+      display: flex; justify-content: center; align-items: center;
+    }
+    .modal-body {
+      background: linear-gradient(170deg, #141623 0%, #0a0c14 100%);
+      border: 1px solid var(--border-bright);
+      border-radius: 2px;
+      padding: 2.2rem;
+      width: 320px;
+      text-align: center;
+      position: relative;
+      animation: cardIn 0.4s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    .modal-body::before, .modal-body::after {
+      content: ''; position: absolute;
+      width: 16px; height: 16px;
+      border-color: var(--neon); border-style: solid;
+      opacity: 0.5;
+    }
+    .modal-body::before { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    .modal-body::after { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+    .modal-icon {
+      width: 48px; height: 48px;
+      border: 2px solid var(--success);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+      color: var(--success); font-size: 1.4rem;
+    }
+    .modal-body h2 {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--success);
+      margin-bottom: 0.6rem;
+    }
+    .modal-body p {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+      margin-bottom: 0.3rem;
+    }
+    .countdown {
+      font-family: 'Orbitron', monospace;
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      letter-spacing: 0.15em;
+      margin-top: 0.8rem;
+    }
+
+    /* footer */
+    .card-footer {
+      padding: 0.5rem 1.8rem;
+      border-top: 1px solid var(--border);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-align: right;
+      letter-spacing: 0.05em;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* responsive */
+    @media (max-width: 480px) {
+      .card { width: 94%; }
+      .card-body { padding: 1.2rem 1.2rem 1.4rem; }
+      .card-header { padding: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- star field -->
+  <div class="stars" id="stars"></div>
+  <div class="rail-line"></div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="emblem">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="header-info">
+        <h1>ZZZeroUID</h1>
+        <div class="sub">New Eridu Access Terminal</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="auto">Auto Login</button>
+      <button class="tab-btn" data-tab="cookie">Manual Cookie</button>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Tab 1: Auto Login -->
+      <div id="tab-auto" class="tab-content active">
+        <div class="form-desc">Link your HoYoLab account</div>
+        <form id="autoForm">
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="autoEmail" required placeholder="proxy@newEridu.com">
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <input type="password" id="autoPassword" required placeholder="HoYoLab password">
+          </div>
+          <div id="geetestBox" style="display:none; margin: 1rem 0;">
+            <div id="geetestWidget"></div>
+          </div>
+          <button type="submit" class="btn btn-primary" id="autoBtn">Initiate Link</button>
+        </form>
+        <div id="autoStatus" class="status-msg"></div>
+      </div>
+
+      <!-- Tab 2: Manual Cookie -->
+      <div id="tab-cookie" class="tab-content">
+        <div class="hint">
+          <strong>Extraction Protocol:</strong><br>
+          1. Open <a href="https://www.hoyolab.com" target="_blank">hoyolab.com</a> and log in<br>
+          2. Press <code>F12</code> &rarr; Application &rarr; Cookies<br>
+          3. Select <code>.hoyolab.com</code><br>
+          4. Copy each value below<br><br>
+          <a href="{{ server_url }}/zzz/cookie-guide" target="_blank">View full guide (PDF)</a>
+        </div>
+        <form id="cookieForm">
+          <div class="field">
+            <label><code>ltoken_v2</code></label>
+            <input type="text" id="ck_ltoken" required placeholder="v2_CAIS...">
+          </div>
+          <div class="field">
+            <label><code>ltuid_v2</code></label>
+            <input type="text" id="ck_ltuid" required placeholder="70985654">
+          </div>
+          <div class="field">
+            <label><code>cookie_token_v2</code></label>
+            <input type="text" id="ck_cookie_token" required placeholder="v2_CAQS...">
+          </div>
+          <div class="field">
+            <label><code>account_id_v2</code></label>
+            <input type="text" id="ck_account_id" required placeholder="70985654">
+          </div>
+          <button type="submit" class="btn btn-secondary" id="cookieBtn">Submit Cookies</button>
+        </form>
+        <div id="cookieStatus" class="status-msg"></div>
+      </div>
+
+    </div>
+
+    <div class="card-footer">
+      ID: {{ userId }}
+    </div>
+  </div>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="modal">
+    <div class="modal-body">
+      <div class="modal-icon">&#10003;</div>
+      <h2>Link Established</h2>
+      <p>Your HoYoLab account is now connected.</p>
+      <p>Use <strong style="color:var(--neon);">zzz</strong> commands in Discord.</p>
+      <p class="countdown">Redirecting in 5 seconds...</p>
+    </div>
+  </div>
+
+  <script>
+    // ---- generate star field ----
+    (function() {
+      const container = document.getElementById('stars');
+      for (let i = 0; i < 80; i++) {
+        const s = document.createElement('span');
+        s.style.left = Math.random() * 100 + '%';
+        s.style.top = Math.random() * 100 + '%';
+        s.style.setProperty('--d', (3 + Math.random() * 5) + 's');
+        s.style.setProperty('--delay', (Math.random() * 5) + 's');
+        s.style.setProperty('--peak', (0.3 + Math.random() * 0.7).toFixed(2));
+        if (Math.random() > 0.85) {
+          s.style.width = '3px'; s.style.height = '3px';
+          s.style.boxShadow = '0 0 4px rgba(255,51,102,0.4)';
+        }
+        container.appendChild(s);
+      }
+    })();
+
+    const AUTH = '{{ auth }}';
+    const SERVER_URL = '{{ server_url }}';
+
+    // ============ Tab switching ============
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ============ Status helpers ============
+    function showStatus(id, type, msg) {
+      const el = document.getElementById(id);
+      el.className = 'status-msg ' + type;
+      el.textContent = msg;
+    }
+    function hideStatus(id) {
+      document.getElementById(id).className = 'status-msg';
+    }
+
+    // ============ Auto Login (background task + polling) ============
+    let pollTimer = null;
+
+    document.getElementById('autoForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const email = document.getElementById('autoEmail').value;
+      const password = document.getElementById('autoPassword').value;
+      const btn = document.getElementById('autoBtn');
+
+      btn.disabled = true;
+      btn.textContent = 'CONNECTING...';
+      showStatus('autoStatus', 'loading', 'Establishing link with HoYoLab...');
+
+      try {
+        const resp = await fetch(SERVER_URL + '/zzz/login/auto', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ auth: AUTH, email: email, password: password })
+        });
+        const data = await resp.json();
+        if (data.pending) {
+          startPolling();
+        } else if (!data.success) {
+          showStatus('autoStatus', 'error', data.msg || 'Link failed');
+          btn.disabled = false;
+          btn.textContent = 'INITIATE LINK';
+        }
+      } catch (err) {
+        showStatus('autoStatus', 'error', 'Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'INITIATE LINK';
+      }
+    });
+
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        try {
+          const resp = await fetch(SERVER_URL + '/zzz/login/status/' + AUTH);
+          const data = await resp.json();
+
+          if (data.status === 'success') {
+            clearInterval(pollTimer);
+            showStatus('autoStatus', 'success', data.msg || 'Link established');
+            showSuccessModal();
+          } else if (data.status === 'error') {
+            clearInterval(pollTimer);
+            showStatus('autoStatus', 'error', data.msg || 'Link failed');
+            document.getElementById('autoBtn').disabled = false;
+            document.getElementById('autoBtn').textContent = 'INITIATE LINK';
+          } else if (data.status === 'geetest') {
+            if (!document.getElementById('geetestBox').dataset.loaded) {
+              document.getElementById('geetestBox').dataset.loaded = '1';
+              showStatus('autoStatus', 'loading', 'Security verification required');
+              loadGeetestV3(data.geetest);
+            }
+          } else if (data.status === 'expired') {
+            clearInterval(pollTimer);
+            showStatus('autoStatus', 'error', 'Session expired. Send zzz\u767B\u5F55 again.');
+          }
+        } catch (err) {
+          console.error('Poll error:', err);
+        }
+      }, 1000);
+    }
+
+    // ============ Geetest v3 ============
+    function loadGeetestV3(geetestData) {
+      const box = document.getElementById('geetestBox');
+      const widget = document.getElementById('geetestWidget');
+      widget.innerHTML = '';
+      box.style.display = 'block';
+
+      if (!window.initGeetest) {
+        const script = document.createElement('script');
+        script.src = 'https://static.geetest.com/static/tools/gt.js';
+        script.onload = function() { initGeetestWidget(geetestData); };
+        script.onerror = function() {
+          showStatus('autoStatus', 'error', 'CAPTCHA load failed. Use Manual Cookie tab.');
+        };
+        document.head.appendChild(script);
+      } else {
+        initGeetestWidget(geetestData);
+      }
+    }
+
+    function initGeetestWidget(geetestData) {
+      initGeetest({
+        gt: geetestData.gt,
+        challenge: geetestData.challenge,
+        offline: false,
+        new_captcha: true,
+        product: 'popup',
+        width: '100%',
+        lang: 'en'
+      }, function(captchaObj) {
+        captchaObj.appendTo('#geetestWidget');
+        captchaObj.onReady(function() {
+          showStatus('autoStatus', 'loading', 'Complete verification to proceed');
+        });
+        captchaObj.onSuccess(function() {
+          const result = captchaObj.getValidate();
+          fetch(SERVER_URL + '/zzz/login/geetest', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              auth: AUTH,
+              geetest_challenge: result.geetest_challenge,
+              geetest_validate: result.geetest_validate,
+              geetest_seccode: result.geetest_seccode
+            })
+          }).then(() => {
+            document.getElementById('geetestBox').style.display = 'none';
+            showStatus('autoStatus', 'loading', 'Verifying credentials...');
+          });
+        });
+        captchaObj.onError(function() {
+          showStatus('autoStatus', 'error', 'Verification failed. Use Manual Cookie tab.');
+        });
+      });
+    }
+
+    // ============ Cookie Login ============
+    document.getElementById('cookieForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const ltoken = document.getElementById('ck_ltoken').value.trim();
+      const ltuid = document.getElementById('ck_ltuid').value.trim();
+      const cookieToken = document.getElementById('ck_cookie_token').value.trim();
+      const accountId = document.getElementById('ck_account_id').value.trim();
+      const btn = document.getElementById('cookieBtn');
+
+      if (!ltoken || !ltuid || !cookieToken || !accountId) {
+        showStatus('cookieStatus', 'error', 'All four fields are required');
+        return;
+      }
+
+      const cookie = `ltoken_v2=${ltoken}; ltuid_v2=${ltuid}; cookie_token_v2=${cookieToken}; account_id_v2=${accountId}`;
+
+      btn.disabled = true;
+      btn.textContent = 'PROCESSING...';
+      showStatus('cookieStatus', 'loading', 'Validating cookies...');
+
+      try {
+        const resp = await fetch(SERVER_URL + '/zzz/login/cookie', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ auth: AUTH, cookie: cookie })
+        });
+        const data = await resp.json();
+
+        if (data.success) {
+          showStatus('cookieStatus', 'success', data.msg || 'Cookies accepted');
+          showSuccessModal();
+        } else {
+          showStatus('cookieStatus', 'error', data.msg || 'Cookie validation failed');
+          btn.disabled = false;
+          btn.textContent = 'SUBMIT COOKIES';
+        }
+      } catch (err) {
+        showStatus('cookieStatus', 'error', 'Network error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'SUBMIT COOKIES';
+      }
+    });
+
+    // ============ Success Modal ============
+    function showSuccessModal() {
+      const modal = document.getElementById('successModal');
+      const countdown = modal.querySelector('.countdown');
+      modal.classList.add('show');
+      if (pollTimer) clearInterval(pollTimer);
+
+      let sec = 5;
+      const timer = setInterval(() => {
+        sec--;
+        if (sec > 0) {
+          countdown.textContent = 'REDIRECTING IN ' + sec + '...';
+        } else {
+          clearInterval(timer);
+          window.location.href = 'https://github.com/ZZZure/ZZZeroUID';
+        }
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
