@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import os
 import time
 from collections import OrderedDict
 from typing import Optional
@@ -85,6 +86,10 @@ def get_token(user_id: str) -> str:
 
 
 def get_server_url() -> str:
+    # Use GSUID_PUBLIC_URL env var for cloud deployment
+    public_url = os.environ.get("GSUID_PUBLIC_URL", "")
+    if public_url:
+        return public_url.rstrip("/")
     host = core_config.get_config("HOST")
     port = core_config.get_config("PORT")
     if host in ("localhost", "127.0.0.1", "0.0.0.0"):

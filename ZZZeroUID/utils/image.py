@@ -239,10 +239,19 @@ async def get_player_card_min(
 
     user_name = data["nickname"]
     world_level = str(data["level"])
+    # Inter-Knot rank title translation (international API returns English)
+    _rank_title_map = {
+        "Legendary Proxy": "传奇绳匠",
+        "Elite Proxy": "精英绳匠",
+        "Senior Proxy": "资深绳匠",
+        "Certified Proxy": "正式绳匠",
+        "Novice Proxy": "见习绳匠",
+    }
     if world:
-        region_name = world
+        region_name = _rank_title_map.get(world, world)
     else:
-        region_name = data["region_name"]
+        raw_name = data["region_name"]
+        region_name = _rank_title_map.get(raw_name, raw_name)
 
     player_card = Image.open(TEXT_PATH / "player_card_min.png")
     card_draw = ImageDraw.Draw(player_card)
