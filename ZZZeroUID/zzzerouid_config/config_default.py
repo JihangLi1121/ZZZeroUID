@@ -81,7 +81,7 @@ CONFIG_DEFAULT: Dict[str, GSC] = {
     "RefreshDataList": GsListStrConfig(
         "刷新面板顺序",
         "前一个失败会自动使用后一个",
-        ["ENKA", "MINIGG", "MYS"],
+        ["MYS", "ENKA", "MINIGG"],
         options=[
             "MINIGG",
             "ENKA",

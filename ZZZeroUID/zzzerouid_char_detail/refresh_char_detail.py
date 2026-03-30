@@ -1,4 +1,5 @@
 import json
+from pathlib import Path as _Path
 from typing import List, Union, Literal
 from datetime import datetime
 
@@ -24,6 +25,14 @@ from ..utils.resource.RESOURCE_PATH import PLAYER_PATH
 from ..zzzerouid_config.zzzero_config import ZZZ_CONFIG
 
 REFRESH_BG_PATH = TEXT_PATH / "refresh_bg"
+
+# Load Chinese name mapping for button labels
+_PARTNER_DATA_FILE = _Path(__file__).parent.parent / "utils" / "map" / "PartnerId2Data_2.6.0.json"
+_PARTNER_NAMES = {}
+if _PARTNER_DATA_FILE.exists():
+    with open(_PARTNER_DATA_FILE, encoding="utf-8") as _f:
+        _raw = json.load(_f)
+        _PARTNER_NAMES = {k: v.get("name", "") for k, v in _raw.items()}
 
 
 async def refresh_char_by_config(
@@ -99,11 +108,14 @@ async def refresh_char(
                 indent=4,
             ).encode("utf-8")
             f.write(d)
-        im.append(avatar["name_mi18n"])
+        # Prefer Chinese name from PartnerId2Data for button labels
+        cn_name = _PARTNER_NAMES.get(str(_id), "") or avatar["name_mi18n"]
+        im.append(cn_name)
 
     is_pic: bool = ZZZ_CONFIG.get_config("RefreshCardUsePic").data
     if is_pic and not only_refresh:
-        return await draw_refresh_card(uid, ev, data)
+        img = await draw_refresh_card(uid, ev, data)
+        return img, im  # (image_bytes, char_name_list)
 
     msg = f"[绝区零] 刷新完成！本次刷新{len(im)}个角色!"
     msg += f"\n刷新角色列表:{','.join(im)}"

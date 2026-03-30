@@ -142,14 +142,12 @@ async def page_login(bot: Bot, ev: Event):
                     )
 
                 if result.get("status") == "success":
-                    cache.delete(user_token)
                     msg = result.get("result_msg", "登录成功!")
                     return await bot.send(
                         f"{GAME_TITLE} {msg}",
                         at_sender=at_sender,
                     )
                 elif result.get("status") == "error":
-                    cache.delete(user_token)
                     msg = result.get("result_msg", "登录失败!")
                     return await bot.send(
                         f"{GAME_TITLE} {msg}",
@@ -168,11 +166,12 @@ async def page_login(bot: Bot, ev: Event):
 # ============ Process cookies via gsuid_core ============
 
 # ZZZ UIDs are 10+ digits; region determined by prefix
+# ZZZ region mapping (matches the plugin's own REGION_MAP in request.py)
 ZZZ_SERVER = {
-    "10": "prod_gf_cn",
-    "13": "prod_official_usa",
-    "15": "prod_official_euro",
-    "17": "prod_official_asia",
+    "10": "prod_gf_us",
+    "13": "prod_gf_jp",
+    "15": "prod_gf_eu",
+    "17": "prod_gf_sg",
 }
 
 

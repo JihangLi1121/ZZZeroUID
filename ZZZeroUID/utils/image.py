@@ -3,6 +3,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
+from gsuid_core.logger import logger
 from gsuid_core.models import Event
 from gsuid_core.utils.database.models import CoreUser
 from gsuid_core.utils.image.image_tools import (
@@ -81,11 +82,30 @@ camp_map = {
     "云岿山": "Suibian",
     "怪啖屋": "SpookShack",
     "坎卜斯黑枝": "BlackRoot",
+    # English camp names (MINIGG / international data source)
+    "Belobog Industries": "BelobogIndustries",
+    "Cunning Hares": "GentleHouse",
+    "Hollow Special Operations Section 6": "H.S.O-S6",
+    "Sons of Calydon": "SonsOfCalydon",
+    "Victoria Housekeeping Co.": "VictoriaHousekeepingCo.",
+    "New Eridu Public Security": "N.E.P.S.",
+    "Criminal Investigation Special Response Team": "JaneBadge",
+    "Stars of Lyra": "StarsOfLyra",
+    "Defense Force - Silver Squad": "Silvers",
+    "Defense Force - Obols Squad": "Obols",
+    "Mockingbird": "MockingBird",
+    "Caelum Ark": "Suibian",
+    "Section 6": "H.S.O-S6",
+    "Angels of Delusion": "SpookShack",
+    "Campu Schwarze Branche": "BlackRoot",
 }
 
 
 def get_camp_img(camp_name: str):
-    name = camp_map[camp_name]
+    name = camp_map.get(camp_name)
+    if not name:
+        logger.warning(f"[绝区零] Unknown camp: {camp_name}")
+        return Image.open(CAMP_PATH / "IconCampN.E.P.S..png")
     return Image.open(CAMP_PATH / f"IconCamp{name}.png")
 
 

@@ -3,6 +3,7 @@ from typing import List
 from gsuid_core.sv import SV
 from gsuid_core.bot import Bot
 from gsuid_core.logger import logger
+from gsuid_core.message_models import Button
 from gsuid_core.models import Event
 
 from ..utils.uid import get_uid
@@ -34,7 +35,15 @@ async def send_refresh_char_detail_msg(bot: Bot, ev: Event):
         try:
             logger.info(f"[绝区零] [刷新面板] [{i}] UID: {uid}")
             im = await refresh_char_by_config(i, uid, ev)
-            if isinstance(im, bytes):
+            if isinstance(im, tuple):
+                img, char_names = im
+                # Discord limit: 5 action rows, 2 buttons/row = 10 max
+                buttons = [
+                    Button(f"✅查询{name}", f"zzz查询{name}")
+                    for name in char_names[:10]
+                ]
+                return await bot.send_option(img, buttons)
+            elif isinstance(im, bytes):
                 return await bot.send(im)
         except Exception as e:
             logger.error(f"[绝区零] [刷新面板] [{i}] ERROR: {e}")
