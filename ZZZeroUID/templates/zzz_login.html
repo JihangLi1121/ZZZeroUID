@@ -649,115 +649,81 @@
       }, 1000);
     }
 
-    // ============ Geetest v4 (with v3 fallback) ============
+    // ============ Geetest v3 ============
+    // Pre-load gt.js immediately so it's ready when challenge arrives
+    (function() {
+      const script = document.createElement('script');
+      script.src = 'https://static.geetest.com/static/tools/gt.js';
+      document.head.appendChild(script);
+    })();
+
     function loadGeetestV3(geetestData) {
       const box = document.getElementById('geetestBox');
       const widget = document.getElementById('geetestWidget');
       widget.innerHTML = '';
       box.style.display = 'block';
 
-      // Try Geetest v4 first
-      if (!window.initGeetest4) {
-        const script = document.createElement('script');
-        script.src = 'https://static.geetest.com/v4/gt4.js';
-        script.onload = function() { initGeetestV4Widget(geetestData); };
-        script.onerror = function() {
-          // Fallback to v3
-          loadGeetestV3Fallback(geetestData);
-        };
-        document.head.appendChild(script);
-      } else {
-        initGeetestV4Widget(geetestData);
-      }
-    }
-
-    function initGeetestV4Widget(geetestData) {
-      initGeetest4({
-        captchaId: geetestData.gt,
-        product: 'bind',
-        language: 'en',
-      }, function(captchaObj) {
-        captchaObj.appendTo('#geetestWidget');
-        captchaObj.onReady(function() {
-          showStatus('autoStatus', 'loading', 'Complete verification to proceed');
-          captchaObj.showCaptcha();
-        });
-        captchaObj.onSuccess(function() {
-          const result = captchaObj.getValidate();
-          fetch(SERVER_URL + '/zzz/login/geetest', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              auth: AUTH,
-              geetest_challenge: geetestData.challenge,
-              geetest_validate: result.lot_number + ',' + result.pass_token + ',' + result.gen_time + ',' + result.captcha_output,
-              geetest_seccode: result.lot_number + ',' + result.pass_token + ',' + result.gen_time + ',' + result.captcha_output
-            })
-          }).then(() => {
-            document.getElementById('geetestBox').style.display = 'none';
-            showStatus('autoStatus', 'loading', 'Verifying credentials...');
-          });
-        });
-        captchaObj.onError(function(e) {
-          console.error('Geetest v4 error:', e);
-          // Fallback to v3
-          loadGeetestV3Fallback(geetestData);
-        });
-      });
-    }
-
-    function loadGeetestV3Fallback(geetestData) {
-      const widget = document.getElementById('geetestWidget');
-      widget.innerHTML = '';
-
       if (!window.initGeetest) {
-        const script = document.createElement('script');
-        script.src = 'https://static.geetest.com/static/tools/gt.js';
-        script.onload = function() { initGeetestV3Widget(geetestData); };
-        script.onerror = function() {
-          showStatus('autoStatus', 'error', 'CAPTCHA load failed. Try again or use Manual Cookie tab.');
-        };
-        document.head.appendChild(script);
+        // gt.js hasn't loaded yet, wait for it
+        const check = setInterval(function() {
+          if (window.initGeetest) {
+            clearInterval(check);
+            initGeetestWidget(geetestData);
+          }
+        }, 100);
+        // Give up after 10 seconds
+        setTimeout(function() {
+          clearInterval(check);
+          if (!window.initGeetest) {
+            showStatus('autoStatus', 'error', 'CAPTCHA script failed to load. Try again.');
+          }
+        }, 10000);
       } else {
-        initGeetestV3Widget(geetestData);
+        initGeetestWidget(geetestData);
       }
     }
 
-    function initGeetestV3Widget(geetestData) {
-      initGeetest({
-        gt: geetestData.gt,
-        challenge: geetestData.challenge,
-        offline: false,
-        new_captcha: true,
-        product: 'popup',
-        width: '100%',
-        lang: 'en'
-      }, function(captchaObj) {
-        captchaObj.appendTo('#geetestWidget');
-        captchaObj.onReady(function() {
-          showStatus('autoStatus', 'loading', 'Complete verification to proceed');
-        });
-        captchaObj.onSuccess(function() {
-          const result = captchaObj.getValidate();
-          fetch(SERVER_URL + '/zzz/login/geetest', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-              auth: AUTH,
-              geetest_challenge: result.geetest_challenge,
-              geetest_validate: result.geetest_validate,
-              geetest_seccode: result.geetest_seccode
-            })
-          }).then(() => {
-            document.getElementById('geetestBox').style.display = 'none';
-            showStatus('autoStatus', 'loading', 'Verifying credentials...');
+    function initGeetestWidget(geetestData) {
+      try {
+        initGeetest({
+          gt: geetestData.gt,
+          challenge: geetestData.challenge,
+          offline: false,
+          new_captcha: true,
+          product: 'bind',
+          width: '100%',
+          lang: 'en'
+        }, function(captchaObj) {
+          captchaObj.appendTo('#geetestWidget');
+          captchaObj.onReady(function() {
+            showStatus('autoStatus', 'loading', 'Complete verification to proceed');
+            captchaObj.showBox();
+          });
+          captchaObj.onSuccess(function() {
+            const result = captchaObj.getValidate();
+            fetch(SERVER_URL + '/zzz/login/geetest', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                auth: AUTH,
+                geetest_challenge: result.geetest_challenge,
+                geetest_validate: result.geetest_validate,
+                geetest_seccode: result.geetest_seccode
+              })
+            }).then(() => {
+              document.getElementById('geetestBox').style.display = 'none';
+              showStatus('autoStatus', 'loading', 'Verifying credentials...');
+            });
+          });
+          captchaObj.onError(function(e) {
+            console.error('Geetest error:', e);
+            showStatus('autoStatus', 'error', 'Verification failed: ' + (e.error_code || e.msg || 'unknown error'));
           });
         });
-        captchaObj.onError(function(e) {
-          console.error('Geetest v3 error:', e);
-          showStatus('autoStatus', 'error', 'Verification failed. Try again or use Manual Cookie tab.');
-        });
-      });
+      } catch(e) {
+        console.error('Geetest init error:', e);
+        showStatus('autoStatus', 'error', 'CAPTCHA init failed: ' + e.message);
+      }
     }
 
     // ============ Cookie Login ============
