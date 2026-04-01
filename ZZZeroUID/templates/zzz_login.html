@@ -649,27 +649,81 @@
       }, 1000);
     }
 
-    // ============ Geetest v3 ============
+    // ============ Geetest v4 (with v3 fallback) ============
     function loadGeetestV3(geetestData) {
       const box = document.getElementById('geetestBox');
       const widget = document.getElementById('geetestWidget');
       widget.innerHTML = '';
       box.style.display = 'block';
 
-      if (!window.initGeetest) {
+      // Try Geetest v4 first
+      if (!window.initGeetest4) {
         const script = document.createElement('script');
-        script.src = 'https://static.geetest.com/static/tools/gt.js';
-        script.onload = function() { initGeetestWidget(geetestData); };
+        script.src = 'https://static.geetest.com/v4/gt4.js';
+        script.onload = function() { initGeetestV4Widget(geetestData); };
         script.onerror = function() {
-          showStatus('autoStatus', 'error', 'CAPTCHA load failed. Use Manual Cookie tab.');
+          // Fallback to v3
+          loadGeetestV3Fallback(geetestData);
         };
         document.head.appendChild(script);
       } else {
-        initGeetestWidget(geetestData);
+        initGeetestV4Widget(geetestData);
       }
     }
 
-    function initGeetestWidget(geetestData) {
+    function initGeetestV4Widget(geetestData) {
+      initGeetest4({
+        captchaId: geetestData.gt,
+        product: 'bind',
+        language: 'en',
+      }, function(captchaObj) {
+        captchaObj.appendTo('#geetestWidget');
+        captchaObj.onReady(function() {
+          showStatus('autoStatus', 'loading', 'Complete verification to proceed');
+          captchaObj.showCaptcha();
+        });
+        captchaObj.onSuccess(function() {
+          const result = captchaObj.getValidate();
+          fetch(SERVER_URL + '/zzz/login/geetest', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              auth: AUTH,
+              geetest_challenge: geetestData.challenge,
+              geetest_validate: result.lot_number + ',' + result.pass_token + ',' + result.gen_time + ',' + result.captcha_output,
+              geetest_seccode: result.lot_number + ',' + result.pass_token + ',' + result.gen_time + ',' + result.captcha_output
+            })
+          }).then(() => {
+            document.getElementById('geetestBox').style.display = 'none';
+            showStatus('autoStatus', 'loading', 'Verifying credentials...');
+          });
+        });
+        captchaObj.onError(function(e) {
+          console.error('Geetest v4 error:', e);
+          // Fallback to v3
+          loadGeetestV3Fallback(geetestData);
+        });
+      });
+    }
+
+    function loadGeetestV3Fallback(geetestData) {
+      const widget = document.getElementById('geetestWidget');
+      widget.innerHTML = '';
+
+      if (!window.initGeetest) {
+        const script = document.createElement('script');
+        script.src = 'https://static.geetest.com/static/tools/gt.js';
+        script.onload = function() { initGeetestV3Widget(geetestData); };
+        script.onerror = function() {
+          showStatus('autoStatus', 'error', 'CAPTCHA load failed. Try again or use Manual Cookie tab.');
+        };
+        document.head.appendChild(script);
+      } else {
+        initGeetestV3Widget(geetestData);
+      }
+    }
+
+    function initGeetestV3Widget(geetestData) {
       initGeetest({
         gt: geetestData.gt,
         challenge: geetestData.challenge,
@@ -699,8 +753,9 @@
             showStatus('autoStatus', 'loading', 'Verifying credentials...');
           });
         });
-        captchaObj.onError(function() {
-          showStatus('autoStatus', 'error', 'Verification failed. Use Manual Cookie tab.');
+        captchaObj.onError(function(e) {
+          console.error('Geetest v3 error:', e);
+          showStatus('autoStatus', 'error', 'Verification failed. Try again or use Manual Cookie tab.');
         });
       });
     }
